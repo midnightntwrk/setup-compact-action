@@ -59,6 +59,7 @@ runs:
       with:
         path: |
           ~/.local/bin/compact
+          ~/.local/share/compact/
         key: ${{ steps.determine-version.outputs.cache-key }}
         restore-keys: |
           compact-${{ runner.os }}-${{ runner.arch }}-
