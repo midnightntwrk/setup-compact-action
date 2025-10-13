@@ -75,9 +75,13 @@ runs:
         # Add to PATH for this step
         export PATH="$HOME/.local/bin:$PATH"
         echo "$HOME/.local/bin" >> $GITHUB_PATH
-        # Update to specific version if not latest
-        if [ "${{ steps.determine-version.outputs.version }}" != "latest" ]; then
-          echo "Updating to version ${{ steps.determine-version.outputs.version }}..."
+
+        # Install compiler version
+        if [ "${{ steps.determine-version.outputs.version }}" = "latest" ]; then
+          echo "Installing latest compiler version..."
+          compact update
+        else
+          echo "Installing version ${{ steps.determine-version.outputs.version }}..."
           compact update ${{ steps.determine-version.outputs.version }}
         fi
 
