@@ -58,8 +58,7 @@ runs:
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  #v4.3.0
       with:
         path: |
-          ~/.cargo/bin/compact
-          ~/.cargo/bin/compactc
+          ~/.local/bin/compact
         key: ${{ steps.determine-version.outputs.cache-key }}
         restore-keys: |
           compact-${{ runner.os }}-${{ runner.arch }}-
@@ -73,19 +72,14 @@ runs:
         echo "Installing Compact compiler..."
         curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
 
-        # Add cargo bin to PATH for subsequent steps
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
+        # Add to PATH for this step
+        export PATH="$HOME/.local/bin:$PATH"
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
         # Update to specific version if not latest
         if [ "${{ steps.determine-version.outputs.version }}" != "latest" ]; then
           echo "Updating to version ${{ steps.determine-version.outputs.version }}..."
           compact update ${{ steps.determine-version.outputs.version }}
         fi
-
-    - name: Add Compact to PATH
-      shell: bash
-      run: |
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Verify installation
       id: get-version
