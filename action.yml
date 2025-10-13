@@ -73,7 +73,9 @@ runs:
         echo "Installing Compact compiler..."
         curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
 
-        # Add to PATH
+    - name: Add to PATH
+      shell: bash
+      run: |
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Update compiler
