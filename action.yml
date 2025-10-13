@@ -73,17 +73,19 @@ runs:
         echo "Installing Compact compiler..."
         curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
 
-        # Add to PATH for this step
-        export PATH="$HOME/.local/bin:$PATH"
+        # Add to PATH
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-        # Install compiler version
+    - name: Update compiler
+      shell: bash
+      run: |
+        # Ensure the default compiler is set
         if [ "${{ steps.determine-version.outputs.version }}" = "latest" ]; then
-          echo "Installing latest compiler version..."
-          compact update
+          echo "Verifying latest compiler version..."
+          compact update || true
         else
-          echo "Installing version ${{ steps.determine-version.outputs.version }}..."
-          compact update ${{ steps.determine-version.outputs.version }}
+          echo "Verifying compiler version ${{ steps.determine-version.outputs.version }}..."
+          compact update ${{ steps.determine-version.outputs.version }} || true
         fi
 
     - name: Verify installation
