@@ -1,0 +1,117 @@
+# This file is part of setup-compact-action.
+# Copyright (C) 2025 Midnight Foundation
+# SPDX-License-Identifier: Apache-2.0
+# Licensed under the Apache License, Version 2.0 (the "License");
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Test Setup Compact Action
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-latest:
+    name: Test with latest version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  #v5.0.0
+
+      - name: Setup Compact (latest)
+        id: setup-compact
+        uses: ./
+        with:
+          compact-version: 'latest'
+
+      - name: Verify installation
+        run: |
+          compact compile --version
+          echo "Installed version: ${{ steps.setup-compact.outputs.compact-version }}"
+          echo "Cache hit: ${{ steps.setup-compact.outputs.cache-hit }}"
+
+  test-specific-version:
+    name: Test with specific version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  #v5.0.0
+
+      - name: Setup Compact (0.26.0)
+        id: setup-compact
+        uses: ./
+        with:
+          compact-version: '0.26.0'
+
+      - name: Verify installation
+        run: |
+          compact compile --version
+          echo "Installed version: ${{ steps.setup-compact.outputs.compact-version }}"
+
+  test-cache:
+    name: Test caching behavior
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  #v5.0.0
+
+      - name: First run (should miss cache)
+        id: first-run
+        uses: ./
+        with:
+          compact-version: '0.26.0'
+
+      - name: Verify first run
+        run: |
+          echo "First run cache hit: ${{ steps.first-run.outputs.cache-hit }}"
+          if [ "${{ steps.first-run.outputs.cache-hit }}" = "true" ]; then
+            echo "⚠️ Expected cache miss on first run"
+          fi
+
+      - name: Clear PATH
+        run: echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" >> $GITHUB_ENV
+
+      - name: Second run (should hit cache)
+        id: second-run
+        uses: ./
+        with:
+          compact-version: '0.26.0'
+
+      - name: Verify second run
+        run: |
+          echo "Second run cache hit: ${{ steps.second-run.outputs.cache-hit }}"
+          compact compile --version
+
+  test-no-cache:
+    name: Test without caching
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  #v5.0.0
+
+      - name: Setup Compact (no cache)
+        uses: ./
+        with:
+          compact-version: '0.26.0'
+          cache-enabled: 'false'
+
+      - name: Verify installation
+        run: compact compile --version

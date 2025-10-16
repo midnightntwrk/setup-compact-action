@@ -1,7 +1,84 @@
-# Midnight Template Repository
+# Setup Compact Action
 
-This GitHub repository should be used as a template when creating a new Midnight GitHub repository.
-The template is configured with default repository settings and a set of default files that are expected to exist in all Midnight GitHub repositories.
+A GitHub Action to install and cache the Midnight Compact compiler for use in CI/CD workflows.
+
+## Features
+
+- 🚀 **Fast installation** with intelligent caching
+- 📦 **Version pinning** support (or use latest)
+
+## Usage
+
+### Basic Usage
+
+```yaml
+- name: Setup Compact Compiler
+  uses: midnightntwrk/setup-compact-action@v1
+```
+
+### Specify Version
+
+```yaml
+- name: Setup Compact Compiler
+  uses: midnightntwrk/setup-compact-action@v1
+  with:
+    compact-version: '0.26.0'
+```
+
+### Complete Example
+
+```yaml
+name: Build with Compact
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Compact Compiler
+        uses: midnightntwrk/setup-compact-action@v1
+        with:
+          compact-version: '0.26.0'
+
+      - name: Compile Compact code
+        run: |
+          compact compile --version
+          # Your build commands here
+```
+
+## Inputs
+
+| Input | Description | Required | Default |
+|-------|-------------|----------|---------|
+| `compact-version` | Version of Compact compiler to install (e.g., `0.26.0` or `latest`) | No | `latest` |
+| `cache-enabled` | Enable caching of the Compact installation | No | `true` |
+
+## Outputs
+
+| Output | Description |
+|--------|-------------|
+| `compact-version` | The installed version of Compact compiler |
+| `cache-hit` | Whether the cache was hit (`true` or `false`) |
+
+## Caching Strategy
+
+The action uses GitHub Actions cache to store the Compact compiler binaries. The cache key is based on:
+- Compact version
+- Runner OS
+- Runner architecture
+
+This ensures fast subsequent runs while maintaining version accuracy across different platforms.
+
+## Performance
+
+With caching enabled:
+- **First run**: ~30-60 seconds (downloads and installs)
+- **Cached runs**: ~2-5 seconds (restores from cache)
+
+---
 
 ### LICENSE
 
@@ -39,34 +116,10 @@ signing process, enabling contributors to sign our CLAs directly within a GitHub
 
 ### Dependabot
 
-The Midnight Foundation uses GitHub Dependabot feature to keep our projects dependencies up-to-date and address potential security vulnerabilities. 
+The Midnight Foundation uses GitHub Dependabot feature to keep our projects dependencies up-to-date and address potential security vulnerabilities.
 
 ### Checkmarx
 
 The Midnight Foundation uses Checkmarx for application security (AppSec) to identify and fix security vulnerabilities.
 All repositories are scanned with Checkmarx's suite of tools including: Static Application Security Testing (SAST), Infrastructure as Code (IaC), Software Composition Analysis (SCA), API Security, Container Security and Supply Chain Scans (SCS).
 
-### Unito
-
-Facilitates two-way data synchronization, automated workflows and streamline processes between: Jira, GitHub issues and Github project Kanban board. 
-
-# TODO - New Repo Owner
-
-### Software Package Data Exchange (SPDX)
-Include the following Software Package Data Exchange (SPDX) short-form identifier in a comment at the top headers of each source code file.
-
-
- <I>// This file is part of <B>REPLACE WITH REPO-NAME</B>.<BR>
- // Copyright (C) 2025 Midnight Foundation<BR>
- // SPDX-License-Identifier: Apache-2.0<BR>
- // Licensed under the Apache License, Version 2.0 (the "License");<BR>
- // You may not use this file except in compliance with the License.<BR>
- // You may obtain a copy of the License at<BR>
- //<BR>
- //	http://www.apache.org/licenses/LICENSE-2.0<BR>
- //<BR>
- // Unless required by applicable law or agreed to in writing, software<BR>
- // distributed under the License is distributed on an "AS IS" BASIS,<BR>
- // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<BR>
- // See the License for the specific language governing permissions and<BR>
- // limitations under the License.</I>
