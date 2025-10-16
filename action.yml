@@ -1,0 +1,100 @@
+# This file is part of setup-compact-action.
+# Copyright (C) 2025 Midnight Foundation
+# SPDX-License-Identifier: Apache-2.0
+# Licensed under the Apache License, Version 2.0 (the "License");
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#	http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 'Setup Compact Compiler'
+description: 'Install and cache the Midnight Compact compiler'
+branding:
+  icon: 'download'
+  color: 'blue'
+
+inputs:
+  compact-version:
+    description: 'Version of Compact compiler to install (e.g., 0.26.0)'
+    required: false
+    default: 'latest'
+  cache-enabled:
+    description: 'Enable caching of the Compact installation'
+    required: false
+    default: 'true'
+
+outputs:
+  compact-version:
+    description: 'The installed version of Compact compiler'
+    value: ${{ steps.get-version.outputs.version }}
+  cache-hit:
+    description: 'Whether the cache was hit'
+    value: ${{ steps.cache-compact.outputs.cache-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine Compact version
+      id: determine-version
+      shell: bash
+      run: |
+        if [ "${{ inputs.compact-version }}" = "latest" ]; then
+          echo "version=latest" >> $GITHUB_OUTPUT
+          echo "cache-key=compact-latest-${{ runner.os }}-${{ runner.arch }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${{ inputs.compact-version }}" >> $GITHUB_OUTPUT
+          echo "cache-key=compact-${{ inputs.compact-version }}-${{ runner.os }}-${{ runner.arch }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Cache Compact installation
+      if: inputs.cache-enabled == 'true'
+      id: cache-compact
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  #v4.3.0
+      with:
+        path: |
+          ~/.local/bin/compact
+          ~/.local/share/compact/
+        key: ${{ steps.determine-version.outputs.cache-key }}
+        restore-keys: |
+          compact-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Install Compact compiler
+      if: steps.cache-compact.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        echo "Installing Compact compiler..."
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+
+    - name: Add to PATH
+      shell: bash
+      run: |
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Update compiler
+      shell: bash
+      run: |
+        # Ensure the default compiler is set
+        if [ "${{ steps.determine-version.outputs.version }}" = "latest" ]; then
+          echo "Verifying latest compiler version..."
+          compact update || true
+        else
+          echo "Verifying compiler version ${{ steps.determine-version.outputs.version }}..."
+          compact update ${{ steps.determine-version.outputs.version }} || true
+        fi
+
+    - name: Verify installation
+      id: get-version
+      shell: bash
+      run: |
+        compact compile --version
+        VERSION=$(compact compile --version | head -n1 || echo "unknown")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "✅ Compact compiler installed successfully: $VERSION"
