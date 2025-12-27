@@ -30,9 +30,6 @@ inputs:
     default: 'true'
 
 outputs:
-  compact-version:
-    description: 'The installed version of Compact compiler'
-    value: ${{ steps.get-version.outputs.version }}
   cache-hit:
     description: 'Whether the cache was hit'
     value: ${{ steps.cache-compact.outputs.cache-hit }}
@@ -89,12 +86,5 @@ runs:
           echo "Verifying compiler version ${{ steps.determine-version.outputs.version }}..."
           compact update ${{ steps.determine-version.outputs.version }} || true
         fi
-
-    - name: Verify installation
-      id: get-version
-      shell: bash
-      run: |
         compact compile --version
-        VERSION=$(compact compile --version | head -n1 || echo "unknown")
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "✅ Compact compiler installed successfully: $VERSION"
+        echo "✅ Compact compiler installed successfully"
