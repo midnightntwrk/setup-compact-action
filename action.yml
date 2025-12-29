@@ -28,6 +28,10 @@ inputs:
     description: 'Enable caching of the Compact installation'
     required: false
     default: 'true'
+  github-token:
+    description: 'GitHub token used for API requests (pass secrets.GITHUB_TOKEN)'
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   cache-hit:
@@ -65,7 +69,7 @@ runs:
       if: steps.cache-compact.outputs.cache-hit != 'true'
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         echo "Installing Compact compiler..."
         curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
@@ -77,6 +81,8 @@ runs:
 
     - name: Update compiler
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         # Ensure the default compiler is set
         if [ "${{ steps.determine-version.outputs.version }}" = "latest" ]; then
