@@ -8,13 +8,14 @@ on:
     branches: [main]
   workflow_dispatch: {}   # so you can still run it manually
   schedule:
-    - cron: "0 0 * * *"   # run daily at midnight UTC
+    - cron: '0 0 * * *'   # run daily at midnight UTC
 concurrency:
-  group: ${{ github.event_name != 'merge_group' && format('{0}-{1}', github.workflow, github.head_ref) || github.run_id }}
+  group:
+    ${{ github.event_name != 'merge_group' && format('{0}-{1}', github.workflow, github.head_ref) || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  scan:
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -23,9 +24,7 @@ jobs:
       statuses: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  #v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  #v7.0.1
 
       - name: Scan code
         uses: midnightntwrk/upload-sarif-github-action@07dad711370cc5985885ebcf07cb8c9264bc4167
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
